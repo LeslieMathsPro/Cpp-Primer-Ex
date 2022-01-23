@@ -1,6 +1,21 @@
 #include "head.h"
 
+class Window_mgr {
+public:
+    //窗口中每个屏幕的编号
+    using ScreenIndex = std::vector<Screen>::size_type;
+    //按照编号将指定的Screen重置为空白
+    void clear(ScreenIndex);
+private:
+    //这个Window_mgr追踪的Screen
+    //默认情况下，一个Window_mgr包含一个标准尺寸的空白Screen
+    std::vector<Screen> screens{Screen(24, 80, ' ')};
+};
+
 class Screen {
+    //friend class Window_mgr;
+    //也可以只令成员函数作为友元
+    friend void Window_mgr::clear(ScreenIndex);
 public:
     typedef std::string::size_type pos;
     //也可以等价地使用类型别名来声明一个类型名字
@@ -14,17 +29,8 @@ public:
         { return contents[cursor]; }    //隐式内联
     inline char get(pos ht, pos wd) const; //显式内联
     Screen &move(pos r, pos c);            //能在之后被设为内联
-    Screen &set(char ch)
-    {
-        contents[cursor] = ch;
-        return *this;
-    }
-
-    Screen &set(pos r, pos c, char ch)
-    {
-        contents[r * width + c] = ch;
-        return *this;
-    }
+    Screen &set(char);
+    Screen &set(pos, pos, char);
 
     Screen &display()
     {
@@ -37,12 +43,6 @@ private:
     std::string contents;
 };
 
-// class Window_mgr {
-// private:
-//     //这个Window_mgr追踪的Screen
-//     //默认情况下，一个Window_mgr包含一个标准尺寸的空白Screen
-//     //std::vector<Screen> screens{Screen(24, 80, ' ')};
-// }
 
 inline 
 Screen &Screen::move(pos r, pos c)
@@ -55,6 +55,26 @@ char Screen::get(pos r, pos c) const //在类的内部声明成inline
 {
     pos row = r * width;
     return contents[row + c];
+}
+
+inline Screen &Screen::set(char ch)
+    {
+        contents[cursor] = ch;
+        return *this;
+    }
+
+inline Screen &Screen::set(pos r, pos c, char ch)
+    {
+        contents[r * width + c] = ch;
+        return *this;
+    }
+
+void Window_mgr::clear(ScreenIndex i)
+{
+    //s是一个Screen的引用，指向我们想清空的那个屏幕
+    Screen &s = screens[i];
+    //将那个选定的Screen重置为空白
+    s.contents = string(s.height * s.width, ' ');
 }
 
 int main(){
